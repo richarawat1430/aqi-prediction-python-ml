@@ -65,7 +65,7 @@ npm install
 
 The dataset includes air pollution and weather parameters such as PM2.5, PM10, temperature, humidity, and AQI.
 
-![Dataset Sample](your-image-link)
+![Dataset Sample](https://github.com/richarawat1430/aqi-prediction-python-ml/blob/master/Picture1.png?raw=true)
 # Example Response
 
 {
