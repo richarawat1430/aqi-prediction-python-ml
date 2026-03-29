@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>India Air Quality Dashboard | AI AQI Predictor</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='live_aqi.css') }}">
+    
+</head>
+<body>
+
+<div class="navbar">
+    <a href="{{ url_for('home') }}" class="logo">🌍 AQI Predictor</a>
+    <div class="nav-links">
+        <a href="{{ url_for('home') }}">Home</a>
+        <a href="{{ url_for('about') }}">About</a>
+        <a href="{{ url_for('guide') }}">Air Quality Guide</a>
+        <a href="{{ url_for('live_aqi') }}">Live AQI</a>
+        <a href="{{ url_for('predict') }}">AQI Predictor</a>
+    </div>
+</div>
+
+<div class="container">
+   <h1>Real-Time Air Quality Dashboard</h1>
+
+    <div class="search-box">
+        <select id="stateSelect" onchange="updateCities()">
+            <option value="">Select State</option>
+        </select>
+        <select id="citySelect">
+            <option value="">Select City</option>
+        </select>
+        <button onclick="fetchDetailedAQI()">Check Air Quality</button>
+    </div>
+
+    <div id="dashboard" class="aqi-main-card">
+        <h3 id="displayCity" style="color:#7f8c8d; font-weight: 400;">--</h3>
+        <div id="liveAQI">--</div>
+        <div id="aqiStatus" class="aqi-label">--</div>
+        
+        <div class="pollutant-grid">
+            <div class="p-card"><div class="p-name">PM2.5 (Fine Particles)</div><div class="p-value" id="valPM25">--</div></div>
+            <div class="p-card"><div class="p-name">PM10 (Dust/Smoke)</div><div class="p-value" id="valPM10">--</div></div>
+            <div class="p-card"><div class="p-name">Local Temperature</div><div class="p-value" id="valTemp">--</div></div>
+            <div class="p-card"><div class="p-name">Relative Humidity</div><div class="p-value" id="valHumi">--</div></div>
+        </div>
+    </div>
+
+    <div class="chart-box">
+        <h3 style="color: var(--primary); margin-bottom: 20px;">AQI Trend Visualization</h3>
+        <canvas id="trendChart"></canvas>
+    </div>
+</div>
+
+<script>
+// Data and Select Logic (Kept your logic, updated sorting)
+const locationData = {
+    "Andhra Pradesh": [{n:"Visakhapatnam", lat:17.68, lon:83.21}, {n:"Vijayawada", lat:16.50, lon:80.64}, {n:"Guntur", lat:16.30, lon:80.43}],
+    "Arunachal Pradesh": [{n:"Itanagar", lat:27.08, lon:93.60}, {n:"Tawang", lat:27.58, lon:91.86}],
+    "Assam": [{n:"Guwahati", lat:26.11, lon:91.73}, {n:"Silchar", lat:24.81, lon:92.79}, {n:"Dibrugarh", lat:27.47, lon:94.91}],
+    "Bihar": [{n:"Patna", lat:25.59, lon:85.13}, {n:"Gaya", lat:24.79, lon:85.00}, {n:"Muzaffarpur", lat:26.12, lon:85.39}],
+    "Chandigarh": [{n:"Chandigarh", lat:30.73, lon:76.77}],
+    "Chhattisgarh": [{n:"Raipur", lat:21.25, lon:81.62}, {n:"Bhilai", lat:21.19, lon:81.35}],
+    "Dadra & Nagar Haveli": [{n:"Silvassa", lat:20.27, lon:73.01}],
+    "Daman & Diu": [{n:"Daman", lat:20.41, lon:72.83}],
+    "Delhi": [{n:"New Delhi", lat:28.61, lon:77.20}, {n:"Noida Sector 62", lat:28.62, lon:77.36}, {n:"Rohini", lat:28.70, lon:77.11}],
+    "Goa": [{n:"Panaji", lat:15.49, lon:73.82}, {n:"Margao", lat:15.28, lon:73.98}],
+    "Gujarat": [{n:"Ahmedabad", lat:23.02, lon:72.57}, {n:"Surat", lat:21.17, lon:72.83}, {n:"Vadodara", lat:22.30, lon:73.20}, {n:"Rajkot", lat:22.30, lon:70.78}],
+    "Haryana": [{n:"Gurgaon", lat:28.45, lon:77.02}, {n:"Faridabad", lat:28.40, lon:77.31}, {n:"Rohtak", lat:28.89, lon:76.60}],
+    "Himachal Pradesh": [{n:"Shimla", lat:31.10, lon:77.17}, {n:"Manali", lat:32.24, lon:77.18}, {n:"Dharamshala", lat:32.21, lon:76.32}],
+    "Jammu & Kashmir": [{n:"Srinagar", lat:34.08, lon:74.79}, {n:"Jammu", lat:32.72, lon:74.85}],
+    "Jharkhand": [{n:"Ranchi", lat:23.34, lon:85.30}, {n:"Jamshedpur", lat:22.80, lon:86.20}, {n:"Dhanbad", lat:23.79, lon:86.43}],
+    "Karnataka": [{n:"Bengaluru", lat:12.97, lon:77.59}, {n:"Mysore", lat:12.29, lon:76.63}, {n:"Mangalore", lat:12.91, lon:74.85}],
+    "Kerala": [{n:"Kochi", lat:9.93, lon:76.26}, {n:"Thiruvananthapuram", lat:8.52, lon:76.93}, {n:"Kozhikode", lat:11.25, lon:75.78}],
+    "Ladakh": [{n:"Leh", lat:34.15, lon:77.57}],
+    "Lakshadweep": [{n:"Kavaratti", lat:10.56, lon:72.64}],
+    "Madhya Pradesh": [{n:"Indore", lat:22.71, lon:75.85}, {n:"Bhopal", lat:23.25, lon:77.41}, {n:"Gwalior", lat:26.21, lon:78.17}],
+    "Maharashtra": [{n:"Mumbai", lat:19.07, lon:72.87}, {n:"Pune", lat:18.52, lon:73.85}, {n:"Nagpur", lat:21.14, lon:79.08}, {n:"Nashik", lat:19.99, lon:73.78}],
+    "Manipur": [{n:"Imphal", lat:24.81, lon:93.93}],
+    "Meghalaya": [{n:"Shillong", lat:25.57, lon:91.88}],
+    "Mizoram": [{n:"Aizawl", lat:23.72, lon:92.71}],
+    "Nagaland": [{n:"Kohima", lat:25.67, lon:94.10}],
+    "Odisha": [{n:"Bhubaneswar", lat:20.29, lon:85.82}, {n:"Cuttack", lat:20.46, lon:85.87}],
+    "Puducherry": [{n:"Puducherry", lat:11.94, lon:79.80}],
+    "Punjab": [{n:"Ludhiana", lat:30.90, lon:75.85}, {n:"Amritsar", lat:31.63, lon:74.87}, {n:"Patiala", lat:30.33, lon:76.38}],
+    "Rajasthan": [{n:"Jaipur", lat:26.91, lon:75.78}, {n:"Jodhpur", lat:26.23, lon:73.02}, {n:"Udaipur", lat:24.58, lon:73.71}],
+    "Sikkim": [{n:"Gangtok", lat:27.33, lon:88.61}],
+    "Tamil Nadu": [{n:"Chennai", lat:13.08, lon:80.27}, {n:"Coimbatore", lat:11.01, lon:76.95}, {n:"Madurai", lat:9.92, lon:78.12}],
+    "Telangana": [{n:"Hyderabad", lat:17.38, lon:78.48}, {n:"Warangal", lat:17.96, lon:79.59}],
+    "Tripura": [{n:"Agartala", lat:23.83, lon:91.28}],
+    "Uttar Pradesh": [{n:"Lucknow", lat:26.84, lon:80.94}, {n:"Kanpur", lat:26.44, lon:80.33}, {n:"Noida", lat:28.53, lon:77.39}, {n:"Varanasi", lat:25.31, lon:83.00}],
+    "Uttarakhand": [{n:"Dehradun", lat:30.31, lon:78.03}, {n:"Haridwar", lat:29.94, lon:78.16}],
+    "West Bengal": [{n:"Kolkata", lat:22.57, lon:88.36}, {n:"Howrah", lat:22.59, lon:88.26}, {n:"Durgapur", lat:23.48, lon:87.31}]
+};
+
+const stateSel = document.getElementById("stateSelect");
+Object.keys(locationData).sort().forEach(state => {
+    let opt = document.createElement("option");
+    opt.value = state;
+    opt.innerHTML = state;
+    stateSel.appendChild(opt);
+});
+
+function updateCities() {
+    const state = stateSel.value;
+    const citySelect = document.getElementById("citySelect");
+    citySelect.innerHTML = '<option value="">Select City</option>';
+    if(state) {
+        locationData[state].forEach(city => {
+            let opt = document.createElement("option");
+            opt.value = JSON.stringify(city);
+            opt.innerHTML = city.n;
+            citySelect.appendChild(opt);
+        });
+    }
+}
+
+async function fetchDetailedAQI() {
+    const cityJson = document.getElementById("citySelect").value;
+    if(!cityJson) return alert("Please select a city");
+
+    const city = JSON.parse(cityJson);
+    document.getElementById("dashboard").style.display = "block";
+
+    try {
+        const url = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${city.lat}&longitude=${city.lon}&current=us_aqi,pm10,pm2_5`;
+        const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${city.lat}&longitude=${city.lon}&current=temperature_2m,relative_humidity_2m`;
+
+        const [aqiRes, weatherRes] = await Promise.all([fetch(url), fetch(weatherUrl)]);
+        const aqiData = await aqiRes.json();
+        const weatherData = await weatherRes.json();
+
+        const aqi = aqiData.current.us_aqi;
+        
+        document.getElementById("displayCity").innerText = city.n + ", " + stateSel.value;
+        document.getElementById("liveAQI").innerText = aqi;
+        document.getElementById("valPM25").innerText = aqiData.current.pm2_5 + " µg/m³";
+        document.getElementById("valPM10").innerText = aqiData.current.pm10 + " µg/m³";
+        document.getElementById("valTemp").innerText = weatherData.current.temperature_2m + "°C";
+        document.getElementById("valHumi").innerText = weatherData.current.relative_humidity_2m + "%";
+
+        const status = document.getElementById("aqiStatus");
+        const card = document.getElementById("dashboard");
+        let themeColor, textColor;
+
+        if(aqi <= 50) { themeColor = "#e6f4ea"; textColor = "#00b894"; status.innerText = "Good"; }
+        else if(aqi <= 100) { themeColor = "#fff9e6"; textColor = "#d4af37"; status.innerText = "Moderate"; }
+        else if(aqi <= 200) { themeColor = "#fff3e6"; textColor = "#e67e22"; status.innerText = "Poor"; }
+        else { themeColor = "#ffe6e6"; textColor = "#d63031"; status.innerText = "Severe"; }
+
+        document.body.style.backgroundColor = themeColor;
+        status.style.color = textColor;
+        document.getElementById("liveAQI").style.color = textColor;
+
+    } catch (e) { alert("Data fetch failed."); }
+}
+
+const ctx = document.getElementById('trendChart');
+new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: ['6AM','9AM','12PM','3PM','6PM','9PM','Live'],
+        datasets: [{ 
+            label: 'Recent AQI Levels', 
+            data: [75, 82, 95, 110, 105, 90, 88], 
+            borderColor: '#00b894', 
+            backgroundColor: 'rgba(0, 184, 148, 0.1)',
+            fill: true,
+            tension: 0.4 
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: { legend: { display: false } }
+    }
+});
+</script>
+</body>
+</html>

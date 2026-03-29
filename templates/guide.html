@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Air Quality Guide | AI AQI Predictor</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='guide.css') }}">
+</head>
+<body>
+
+<div class="navbar">
+    <a href="{{ url_for('home') }}" class="logo">🌍 AQI Predictor</a>
+    <div class="nav-links">
+        <a href="{{ url_for('home') }}">Home</a>
+        <a href="{{ url_for('about') }}">About</a>
+        <a href="{{ url_for('guide') }}">Air Quality Guide</a>
+        <a href="{{ url_for('live_aqi') }}">Live AQI</a>
+        <a href="{{ url_for('predict') }}">AQI Predictor</a>
+    </div>
+</div>
+
+<div class="info-header">
+    <h1>Understanding Air Quality</h1>
+    <p>Knowledge is the first step toward a healthier lifestyle. Learn how to interpret the numbers and protect yourself.</p>
+</div>
+
+<div class="container">
+    <section>
+        <h2 style="color: var(--primary);">AQI Categories & Recommendations</h2>
+        <div class="aqi-grid">
+            <div class="aqi-card good">
+                <h2>0 - 50 (Good)</h2>
+                <p>Air quality is satisfactory. You can enjoy outdoor activities freely. Great time for a morning run!</p>
+            </div>
+            <div class="aqi-card moderate">
+                <h2>51 - 100 (Moderate)</h2>
+                <p>Acceptable air quality. However, sensitive individuals may experience minor respiratory irritation.</p>
+            </div>
+            <div class="aqi-card poor">
+                <h2>101 - 200 (Poor)</h2>
+                <p>Breathing discomfort to people with lungs, asthma and heart diseases. Wear a mask if outside for long periods.</p>
+            </div>
+            <div class="aqi-card unhealthy">
+                <h2>201 - 300 (Very Poor)</h2>
+                <p>Health alert: everyone may begin to experience health effects. Avoid prolonged outdoor exertion.</p>
+            </div>
+            <div class="aqi-card severe">
+                <h2>301 - 400 (Severe)</h2>
+                <p>Respiratory effects even on healthy people. Serious health impact on those with existing diseases.</p>
+            </div>
+            <div class="aqi-card hazardous">
+                <h2>400+ (Hazardous)</h2>
+                <p>Emergency condition. The entire population is more likely to be affected. Stay indoors with air purifiers.</p>
+            </div>
+        </div>
+    </section>
+
+    <div class="pollutant-info">
+        <h2>Major Pollutants</h2>
+        
+        <div class="p-item">
+            <div class="p-icon">PM2.5</div>
+            <div class="p-text">
+                <h3>Fine Particulate Matter</h3>
+                <p>Microscopic particles (less than 2.5 microns) that can enter deep into the lungs and even the bloodstream. Often caused by vehicle exhaust and burning wood or coal.</p>
+            </div>
+        </div>
+
+        <div class="p-item">
+            <div class="p-icon">PM10</div>
+            <div class="p-text">
+                <h3>Coarse Particulate Matter</h3>
+                <p>Dust, pollen, and mold particles. While larger than PM2.5, they still cause irritation to the eyes, nose, and throat.</p>
+            </div>
+        </div>
+
+        <div class="p-item">
+            <div class="p-icon">NO₂</div>
+            <div class="p-text">
+                <h3>Nitrogen Dioxide</h3>
+                <p>Primarily gets into the air from the burning of fuel. High levels can cause inflammation of the airways and aggravate asthma.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<footer style="text-align: center; padding: 40px; color: #95a5a6; font-size: 13px;">
+    &copy; 2026 AI AQI Predictor Project. Your data-driven guide to cleaner air.
+</footer>
+
+</body>
+</html>
